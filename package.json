@@ -1,7 +1,6 @@
-
 {
   "name": "react-native-zeroconf-registry",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,6 +12,9 @@
   "author": "",
   "license": "",
   "peerDependencies": {
-    "react-native": "^0.41.2"
+    "react-native": "^0.44.2"
+  },
+  "dependencies": {
+    "events": "^1.1.1"
   }
 }
