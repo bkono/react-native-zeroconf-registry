@@ -86,8 +86,8 @@ public class RNZeroconfRegistryModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-//    public void scan(String type, String protocol, String domain) {
   public void scan(final String serviceName) {
+    final String zName = zeroconfServiceName(serviceName);
     if (mNsdManager == null) {
       mNsdManager = (NsdManager) reactContext.getSystemService(Context.NSD_SERVICE);
     }
@@ -123,9 +123,9 @@ public class RNZeroconfRegistryModule extends ReactContextBaseJavaModule {
 
       @Override
       public void onServiceFound(NsdServiceInfo si) {
-        if (si.getServiceName().equals(serviceName)) {
+        if (si.getServiceName().equals(zName)) {
           WritableMap service = new WritableNativeMap();
-          service.putString(KEY_SERVICE_NAME, si.getServiceName());
+          service.putString(KEY_SERVICE_NAME, serviceName);
           sendEvent(getReactApplicationContext(), EVENT_FOUND, service);
           resolve(si);
         }
@@ -134,13 +134,28 @@ public class RNZeroconfRegistryModule extends ReactContextBaseJavaModule {
       @Override
       public void onServiceLost(NsdServiceInfo serviceInfo) {
         // TODO: determine if its a tracked service
+        String announceName;
+        if (serviceInfo.getServiceName().equals(zName)) {
+          announceName = serviceName;
+        } else {
+          announceName = serviceInfo.getServiceName();
+        }
         WritableMap service = new WritableNativeMap();
-        service.putString(KEY_SERVICE_NAME, serviceInfo.getServiceName());
+        service.putString(KEY_SERVICE_NAME, announceName);
         sendEvent(getReactApplicationContext(), EVENT_REMOVE, service);
       }
     };
 
     mNsdManager.discoverServices(DNSSDSERVICES, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+  }
+
+  private String zeroconfServiceName(String serviceName) {
+    serviceName = serviceName.replace(".", "_");
+    if (!serviceName.startsWith("_")) {
+      serviceName = "_" + serviceName;
+    }
+
+    return serviceName;
   }
 
   public void resolve(NsdServiceInfo si) {
@@ -156,13 +171,6 @@ public class RNZeroconfRegistryModule extends ReactContextBaseJavaModule {
       Log.i(TAG, "lets decode!");
       ZeroconfTxt ztxt = decodeTxt(res.txt);
       Log.i(TAG, ztxt.toString());
-
-//            if (ztxt == null) {
-//                String error = "Failed decoding txt for discovered service";
-//                Log.e(TAG, error);
-//                sendEvent(getReactApplicationContext(), EVENT_ERROR, error);
-//                return;
-//            }
 
       // bringing in old approach, will need to update as multi-service registry is built on the js side
       service.putString(KEY_SERVICE_NAME, si.getServiceName());

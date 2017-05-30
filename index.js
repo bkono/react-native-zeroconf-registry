@@ -49,7 +49,12 @@ export default class ZeroconfRegistry extends EventEmitter {
     this._listeners.resolved = DeviceEventEmitter.addListener('RNZeroconfResolved', service => {
       if (!service || !service.name) { return }
 
-      this._services[service.name] = service
+      if (!service.txt || !service.txt.microService) {
+        this._services[service.name] = service
+      } else {
+        this._services[service.txt.microService] = service
+      }
+
       this.emit('resolved', service)
       this.emit('update')
     })
@@ -71,7 +76,7 @@ export default class ZeroconfRegistry extends EventEmitter {
   }
 
   /**
-   * Scan for go-micro service by name,
+   * Scan for go-micro service by name, ex: go.micro.srv.user
    */
   scan(serviceName) {
     console.log("scan called with serviceName = " + serviceName)
